@@ -1,17 +1,16 @@
-import { When } from '@cucumber/cucumber';
-import { getValue, getElement } from './transformers';
-import { po } from '@qavajs/po-playwright';
-import { expect } from '@playwright/test';
-import { parseCoords } from './utils/utils';
+import {When} from '@badeball/cypress-cucumber-preprocessor';
+import {getElement, getValue} from './transformers';
+import { po } from '@qavajs/po-cypress';
+import {parseCoords} from './utils/utils';
 
 /**
  * Opens provided url
  * @param {string} url - url to navigate
  * @example I open 'https://google.com'
  */
-When('I open {string} url', async function (url: string) {
-    const urlValue = await getValue(url);
-    await page.goto(urlValue);
+When('I open {string} url', function (url: string) {
+    const urlValue = getValue(url);
+    cy.visit(urlValue);
 });
 
 /**
@@ -20,20 +19,20 @@ When('I open {string} url', async function (url: string) {
  * @param {string} value - value to type
  * @example I type 'wikipedia' to 'Google Input'
  */
-When('I type {string} to {string}', async function (value: string, alias: string) {
-    const element = await getElement(alias);
-    const typeValue = await getValue(value);
-    await element.type(typeValue);
+When('I type {string} to {string}', function (value: string, alias: string) {
+    const element = getElement(alias);
+    const typeValue = getValue(value);
+    element.type(typeValue);
 });
-
+//
 /**
  * Click element
  * @param {string} alias - element to click
  * @example I click 'Google Button'
  */
-When('I click {string}', async function (alias: string) {
-    const element = await getElement(alias);
-    await element.click();
+When('I click {string}', function (alias: string) {
+    const element = getElement(alias);
+    element.click();
 });
 
 /**
@@ -41,9 +40,9 @@ When('I click {string}', async function (alias: string) {
  * @param {string} alias - element to click
  * @example I force click 'Google Button'
  */
-When('I force click {string}', async function (alias: string) {
-    const element = await getElement(alias);
-    await element.evaluate((e: HTMLElement) => e.click());
+When('I force click {string}', function (alias: string) {
+    const element = getElement(alias);
+    element.click({force: true});
 });
 
 /**
@@ -51,9 +50,9 @@ When('I force click {string}', async function (alias: string) {
  * @param {string} alias - element to right click
  * @example I right click 'Google Button'
  */
-When('I right click {string}', async function (alias: string) {
-    const element = await getElement(alias);
-    await element.click({button: 'right'});
+When('I right click {string}', function (alias: string) {
+    const element = getElement(alias);
+    element.rightclick();
 });
 
 /**
@@ -61,9 +60,9 @@ When('I right click {string}', async function (alias: string) {
  * @param {string} alias - double element to click
  * @example I double click 'Google Button'
  */
-When('I double click {string}', async function (alias: string) {
-    const element = await getElement(alias);
-    await element.dblclick();
+When('I double click {string}', function (alias: string) {
+    const element = getElement(alias);
+    element.dblclick();
 });
 
 /**
@@ -71,18 +70,18 @@ When('I double click {string}', async function (alias: string) {
  * @param {string} alias - element to clear
  * @example I clear 'Google Input'
  */
-When('I clear {string}', async function (alias: string) {
-    const element = await getElement(alias);
-    await element.fill('');
+When('I clear {string}', function (alias: string) {
+    const element = getElement(alias);
+    element.clear();
 });
 
 /**
  * Switch to parent frame
  * @example I switch to parent frame
  */
-When('I switch to parent frame', async function () {
+When('I switch to parent frame', function () {
     // @ts-ignore
-    po.driver = page;
+    po.driver = cy;
 });
 
 /**
@@ -90,13 +89,15 @@ When('I switch to parent frame', async function () {
  * @param {number} index - index to switch
  * @example I switch to 2 frame
  */
-When('I switch to {int} frame', async function (index: number) {
-    await expect.poll(
-        () => page.frames()?.length,
-        { timeout: config.browser.timeout.page }
-    ).toBeGreaterThan(index);
+When('I switch to {int} frame', function (index: number) {
     // @ts-ignore
-    po.driver = page.frames()[index];
+    const root = po.driver === cy ? cy.get('iframe') : po.driver.find('iframe');
+    // @ts-ignore
+    po.driver = root
+        .eq(0)
+        .then((iframe: JQuery) => iframe.contents())
+        .should('exist')
+        .find('body');
 });
 
 /**
@@ -104,56 +105,21 @@ When('I switch to {int} frame', async function (index: number) {
  * @param {string} index - alias to switch
  * @example I switch to 'IFrame' frame
  */
-When('I switch to {string} frame', async function (frameAlias: string) {
-    const frame = await getElement(frameAlias);
-    const frameHandle = await frame.elementHandle();
-    if (!frameHandle) throw new Error(`Frame '${frameHandle}' does not exist!`);
+When('I switch to {string} frame', function (frameAlias: string) {
+    const frame = getElement(frameAlias);
     // @ts-ignore
-    po.driver = await frameHandle.contentFrame();
-});
-
-/**
- * Switch to window by index
- * @param {number} index - index to switch
- * @example I switch to 2 window
- */
-When('I switch to {int} window', async function (index: number) {
-    await expect.poll(
-        () => context.pages()?.length,
-        { timeout: config.browser.timeout.page }
-    ).toBeGreaterThan(index - 1);
-    global.page = context.pages()[index - 1];
-    //@ts-ignore
-    po.driver = page;
-    await page.bringToFront();
-});
-
-/**
- * Switch to window by title or url
- * @param {string} matcher - url or title of window to switch
- * @example I switch to 'google' window
- */
-When('I switch to {string} window', async function (matcher: string) {
-    const urlOrTitle = await getValue(matcher);
-    const pages = context.pages();
-    for (const p of pages) {
-        if (p.url().includes(urlOrTitle) || (await p.title()).includes(urlOrTitle)) {
-            global.page = p;
-            //@ts-ignore
-            po.driver = p;
-            await page.bringToFront();
-            return;
-        }
-    }
-    throw new Error(`Page matching '${matcher}' is not found`);
+    po.driver = frame
+        .then((iframe: JQuery) => iframe.contents())
+        .should('exist')
+        .find('body');
 });
 
 /**
  * Refresh current page
- * @example I refresh page
+ * @example I r efresh page
  */
-When('I refresh page', async function () {
-    await page.reload();
+When('I refresh page', function () {
+    cy.reload();
 });
 
 /**
@@ -162,8 +128,8 @@ When('I refresh page', async function () {
  * @example I press 'Enter' key
  * @example I press 'Control+C' keys
  */
-When('I press {string} key(s)', async function (key: string) {
-    await page.press('body', key);
+When('I press {string} key(s)', function (key: string) {
+    cy.get('body').type(key);
 });
 
 /**
@@ -173,9 +139,9 @@ When('I press {string} key(s)', async function (key: string) {
  * @example I press 'Enter' key 5 times
  * @example I press 'Control+V' keys 5 times
  */
-When('I press {string} key(s) {int} time(s)', async function (key: string, num: number) {
+When('I press {string} key(s) {int} time(s)', function (key: string, num: number) {
     for (let i: number = 0; i < num; i++) {
-        await page.keyboard.press(key);
+        cy.get('body').type(key);
     }
 });
 
@@ -184,9 +150,11 @@ When('I press {string} key(s) {int} time(s)', async function (key: string, num: 
  * @param {string} alias - element to hover over
  * @example I hover over 'Google Button'
  */
-When('I hover over {string}', async function (alias: string) {
-    const element = await getElement(alias);
-    await element.hover();
+When('I hover over {string}', function (alias: string) {
+    const element = getElement(alias);
+    element.trigger('mouseenter');
+    element.trigger('mouseover');
+    element.trigger('mousemove');
 });
 
 /**
@@ -196,10 +164,10 @@ When('I hover over {string}', async function (alias: string) {
  * @example I select '1900' option from 'Registration Form > Date Of Birth'
  * @example I select '$dateOfBirth' option from 'Registration Form > Date Of Birth' dropdown
  */
-When('I select {string} option from {string} dropdown', async function (option: string, alias: string) {
-    const optionValue = await getValue(option);
-    const select = await getElement(alias);
-    await select.selectOption({ label: optionValue });
+When('I select {string} option from {string} dropdown', function (option: string, alias: string) {
+    const optionValue = getValue(option);
+    const select = getElement(alias);
+    select.select(optionValue);
 });
 
 /**
@@ -208,11 +176,11 @@ When('I select {string} option from {string} dropdown', async function (option: 
  * @param {string} alias - alias of select
  * @example I select 1 option from 'Registration Form > Date Of Birth' dropdown
  */
-When('I select {int}(st|nd|rd|th) option from {string} dropdown', async function (optionIndex: number, alias: string) {
-    const select = await getElement(alias);
-    await select.selectOption({ index: optionIndex - 1 });
+When('I select {int}(st|nd|rd|th) option from {string} dropdown', function (optionIndex: number, alias: string) {
+    const select = getElement(alias);
+    select.select(optionIndex - 1);
 });
-
+//
 /**
  * Click on element with desired text in collection
  * @param {string} expectedText - text to click
@@ -222,10 +190,10 @@ When('I select {int}(st|nd|rd|th) option from {string} dropdown', async function
  */
 When(
     'I click {string} text in {string} collection',
-    async function (value: string, alias: string) {
-        const resolvedValue = await getValue(value);
-        const collection = await getElement(alias);
-        await collection.getByText(resolvedValue).click();
+    function (value: string, alias: string) {
+        const resolvedValue = getValue(value);
+        const collection = getElement(alias);
+        collection.filter(`:contains(${resolvedValue})`).click();
     }
 );
 
@@ -235,11 +203,9 @@ When(
  * @example
  * When I scroll by '0, 100'
  */
-When('I scroll by {string}', async function (offset: string) {
-    const [x, y] = parseCoords(await getValue(offset));
-    await page.evaluate(function (coords) {
-        window.scrollBy(...coords as [number, number]);
-    }, [x, y]);
+When('I scroll by {string}', function (offset: string) {
+    const [x, y] = parseCoords(getValue(offset));
+    cy.scrollTo(x, y);
 });
 
 /**
@@ -249,12 +215,10 @@ When('I scroll by {string}', async function (offset: string) {
  * @example
  * When I scroll by '0, 100' in 'Overflow Container'
  */
-When('I scroll by {string} in {string}', async function (offset: string, alias: string) {
-    const coords = parseCoords(await getValue(offset));
-    const element = await getElement(alias);
-    await element.evaluate(function (element, coords) {
-        element.scrollBy(...coords as [number, number]);
-    }, coords);
+When('I scroll by {string} in {string}', function (offset: string, alias: string) {
+    const [x, y] = parseCoords(getValue(offset));
+    const element = getElement(alias);
+    element.scrollTo(x, y);
 });
 
 /**
@@ -263,62 +227,54 @@ When('I scroll by {string} in {string}', async function (offset: string, alias: 
  * @param {string} value - file path
  * @example I upload '/folder/file.txt' to 'File Input'
  */
-When('I upload {string} file to {string}', async function (value: string, alias: string) {
-    const element = await getElement(alias);
-    const filePath = await getValue(value);
-    await element.setInputFiles(filePath);
+When('I upload {string} file to {string}', function (value: string, alias: string) {
+    const element = getElement(alias);
+    const filePath = getValue(value);
+    element.selectFile(filePath);
 });
 
 /**
  * Accept alert
  * @example I accept alert
  */
-When('I accept alert', async function () {
-    await new Promise<void>((resolve)=> page.once('dialog', async (dialog) => {
-        await dialog.accept();
-        resolve();
-    }))
+When('I accept alert', function () {
+    return new Cypress.Promise((resolve, reject) => {
+        cy.on('window:alert', () => {
+            resolve();
+            return true
+        });
+        cy.on('window:confirm', (alertText) => {
+            resolve();
+            return true;
+        });
+    });
 });
 
 /**
  * Dismiss alert
- * Playwright automatically dismisses all dialogs. This step is just to make it implicitly.
+ * Cypress automatically dismisses all dialogs. This step is just to make it implicitly.
  * @example I dismiss alert
  */
-When('I dismiss alert', async function () {
-    await new Promise<void>((resolve)=> page.once('dialog', async (dialog) => {
-        await dialog.dismiss();
-        resolve();
-    }));
+When('I dismiss alert', function () {
+    return new Cypress.Promise((resolve, reject) => {
+        cy.on('window:alert', () => {
+            resolve();
+            return false
+        });
+        cy.on('window:confirm', (alertText) => {
+            resolve();
+            return false;
+        });
+    });
 });
 
 /**
  * I type {string} to alert
  * @example I type 'coffee' to alert
  */
-When('I type {string} to alert', async function (value: string) {
-    await new Promise<void>((resolve)=> page.once('dialog', async (dialog) => {
-        await dialog.accept(value);
-        resolve();
-    }))
-});
-
-/**
- * Drag&Drop one element to another
- * @param {string} elementAlias - element to drag
- * @param {string} targetAlias - target
- * @example I drag and drop 'Bishop' to 'E4'
- */
-When('I drag and drop {string} to {string}', async function (elementAlias, targetAlias) {
-    const element = await getElement(elementAlias);
-    const target = await getElement(targetAlias);
-    await element.dragTo(target);
-});
-
-/**
- * Open new browser tab
- * @example I open new tab
- */
-When('I open new tab', async function () {
-    await page.evaluate(() => { window.open('about:blank', '_blank') });
+When('I will type {string} to alert', function (value: string) {
+    const resolvedValue = getValue(value);
+    cy.window().then((win) => {
+        cy.stub(win, 'prompt').returns(resolvedValue);
+    });
 });

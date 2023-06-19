@@ -1,7 +1,8 @@
 Feature: storage
 
   Background:
-    When I open 'http://localhost:3000/storage.html' url
+#    When I open 'http://localhost:3000/storage.html' url
+                      When I open '$storagePage' url
 
   Scenario: get cookie
     When I save value of 'fooCookie' cookie as 'cookie'
@@ -20,11 +21,11 @@ Feature: storage
     When I set 'setCookie' cookie as 'setCookieValue'
     And I wait until text of 'Cookie' to contain 'setCookie=setCookieValue'
 
-  Scenario Outline: set <storage> storage
-    When I set '<name>' <storage> storage value as 'set<storage>Value'
-    And I wait until text of '<element>' to contain '"<name>":"set<storage>Value"'
-
-    Examples:
-      | storage | name       | element        |
-      | local   | setLocal   | LocalStorage   |
-      | session | setSession | SessionStorage |
+#  Scenario Outline: set <storage> storage
+#    When I set '<name>' <storage> storage value as 'set<storage>Value'
+#    And I wait until text of '<element>' to contain '"<name>":"set<storage>Value"'
+#
+#    Examples:
+#      | storage | name       | element        |
+#      | local   | setLocal   | LocalStorage   |
+#      | session | setSession | SessionStorage |

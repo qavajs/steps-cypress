@@ -1,5 +1,4 @@
 require('./lib/types.js');
-require('./lib/hooks.js');
 require('./lib/actions.js');
 require('./lib/waits.js');
 require('./lib/validations.js');
@@ -10,6 +9,4 @@ require('./lib/cookies.js');
 require('./lib/localSessionStorage.js');
 require('./lib/mock.js');
 require('./lib/poDefine.js');
-require('./lib/multiBrowser.js');
 require('./lib/mouseActions.js');
-require('./lib/keyboardActions.js');

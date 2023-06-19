@@ -1,0 +1,6 @@
+{
+  "stepDefinitions": [
+    "./test-e2e/step_definitions/*.ts",
+    "./src/*.ts"
+  ]
+}

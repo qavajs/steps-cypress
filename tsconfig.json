@@ -6,7 +6,7 @@
     "test/**/*.spec.ts"
   ],
   "compilerOptions": {
-    "target": "es2016",
+    "target": "esnext",
     "module": "commonjs",
     "moduleResolution": "node",
     "outDir": "./lib",

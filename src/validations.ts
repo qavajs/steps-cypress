@@ -1,6 +1,9 @@
-import { Then } from '@cucumber/cucumber';
-import { getValue, getElement, getConditionWait } from './transformers';
-import { getValidation } from '@qavajs/validation';
+import {Then} from '@badeball/cypress-cucumber-preprocessor';
+import {
+    getValue, getElement, getConditionWait,
+    // getConditionWait
+} from './transformers';
+import {getValidation} from '@qavajs/validation';
 
 /**
  * Verify element condition
@@ -10,10 +13,10 @@ import { getValidation } from '@qavajs/validation';
  * @example I expect 'Loading' not to be present
  * @example I expect 'Search Bar > Submit Button' to be clickable
  */
-Then('I expect {string} {playwrightConditionWait}', async function (alias: string, condition: string) {
-    const element = await getElement(alias);
+Then('I expect {string} {cypressConditionWait}', function (alias: string, condition: string) {
     const wait = getConditionWait(condition);
-    await wait(element, config.browser.timeout.page);
+    const element = getElement(alias);
+    wait(element);
 });
 
 /**
@@ -25,15 +28,14 @@ Then('I expect {string} {playwrightConditionWait}', async function (alias: strin
  * @example I expect text of '#2 of Search Results' does not contain 'yandex'
  */
 Then(
-    'I expect text of {string} {playwrightValidation} {string}',
-    async function (alias: string, validationType: string, value: any) {
-        const expectedValue = await getValue(value);
-        const element = await getElement(alias);
+    'I expect text of {string} {cypressValidation} {string}',
+    function (alias: string, validationType: string, value: any) {
+        const expectedValue = getValue(value);
+        const element = getElement(alias);
         const validation = getValidation(validationType);
-        const elementText: string = await element.innerText();
-        this.log(`AR: ${elementText}`);
-        this.log(`ER: ${expectedValue}`);
-        validation(elementText, expectedValue);
+        element.should((e: JQuery) => {
+            validation(e.text(), expectedValue);
+        });
     }
 );
 
@@ -47,16 +49,15 @@ Then(
  * @example I expect 'innerHTML' property of 'Label' to contain '<b>'
  */
 Then(
-    'I expect {string} property of {string} {playwrightValidation} {string}',
-    async function (property: string, alias: string, validationType: string, value: string) {
-        const propertyName = await getValue(property);
-        const expectedValue = await getValue(value);
-        const element = await getElement(alias);
+    'I expect {string} property of {string} {cypressValidation} {string}',
+    function (property: string, alias: string, validationType: string, value: string) {
+        const propertyName = getValue(property);
+        const expectedValue = getValue(value);
+        const element = getElement(alias);
         const validation = getValidation(validationType);
-        const actualValue = await element.evaluate((node: any, propertyName: string) => node[propertyName], propertyName);
-        this.log(`AR: ${actualValue}`);
-        this.log(`ER: ${expectedValue}`);
-        validation(actualValue, expectedValue);
+        element.should((e: JQuery) => {
+            validation(e.prop(propertyName), expectedValue);
+        });
     }
 );
 
@@ -69,16 +70,15 @@ Then(
  * @example I expect 'href' attribute of 'Home Link' to contain '/home'
  */
 Then(
-    'I expect {string} attribute of {string} {playwrightValidation} {string}',
-    async function (attribute: string, alias: string, validationType: string, value: string) {
-        const attributeName = await getValue(attribute);
-        const expectedValue = await getValue(value);
-        const element = await getElement(alias);
+    'I expect {string} attribute of {string} {cypressValidation} {string}',
+    function (attribute: string, alias: string, validationType: string, value: string) {
+        const attributeName = getValue(attribute);
+        const expectedValue = getValue(value);
+        const element = getElement(alias);
         const validation = getValidation(validationType);
-        const actualValue = await element.getAttribute(attributeName);
-        this.log(`AR: ${actualValue}`);
-        this.log(`ER: ${expectedValue}`);
-        validation(actualValue, expectedValue);
+        element.should((e: JQuery) => {
+            validation(e.attr(attributeName), expectedValue);
+        });
     }
 );
 
@@ -90,14 +90,13 @@ Then(
  * @example I expect current url equals 'https://wikipedia.org'
  */
 Then(
-    'I expect current url {playwrightValidation} {string}',
-    async function (validationType: string, expected: string) {
+    'I expect current url {cypressValidation} {string}',
+    function (validationType: string, expected: string) {
         const validation = getValidation(validationType);
-        const expectedUrl = await getValue(expected);
-        const actualUrl = page.url();
-        this.log(`AR: ${actualUrl}`);
-        this.log(`ER: ${expectedUrl}`);
-        validation(actualUrl, expectedUrl);
+        const expectedUrl = getValue(expected);
+        cy.url().then((actualUrl: string) => {
+            validation(actualUrl, expectedUrl);
+        });
     }
 );
 
@@ -111,15 +110,14 @@ Then(
  * @example I expect number of elements in 'Search Results' collection to be below '51'
  */
 Then(
-    'I expect number of elements in {string} collection {playwrightValidation} {string}',
-    async function (alias: string, validationType: string, value: string) {
-        const expectedValue = await getValue(value);
-        const collection = await getElement(alias);
+    'I expect number of elements in {string} collection {cypressValidation} {string}',
+    function (alias: string, validationType: string, value: string) {
+        const expectedValue = getValue(value);
+        const collection = getElement(alias);
         const validation = getValidation(validationType);
-        const actualCount = await collection.count();
-        this.log(`AR: ${actualCount}`);
-        this.log(`ER: ${expectedValue}`);
-        validation(actualCount, expectedValue);
+        collection.then((collection: JQuery) => {
+            validation(collection.length, expectedValue);
+        });
     }
 );
 
@@ -130,14 +128,13 @@ Then(
  * @example I expect page title equals 'Wikipedia'
  */
 Then(
-    'I expect page title {playwrightValidation} {string}',
-    async function (validationType: string, expected: string) {
+    'I expect page title {cypressValidation} {string}',
+    function (validationType: string, expected: string) {
         const validation = getValidation(validationType);
-        const expectedTitle = await getValue(expected);
-        const actualTitle = await page.title();
-        this.log(`AR: ${actualTitle}`);
-        this.log(`ER: ${expectedTitle}`);
-        validation(actualTitle, expectedTitle);
+        const expectedTitle = getValue(expected);
+        cy.title().then((actualTitle: string) => {
+            validation(actualTitle, expectedTitle);
+        });
     }
 );
 
@@ -150,15 +147,14 @@ Then(
  * @example I expect text of every element in 'Search Results' collection does not contain 'yandex'
  */
 Then(
-    'I expect text of every element in {string} collection {playwrightValidation} {string}',
-    async function (alias: string, validationType: string, value: string) {
-        const expectedValue = await getValue(value);
-        const collection = await getElement(alias);
+    'I expect text of every element in {string} collection {cypressValidation} {string}',
+    function (alias: string, validationType: string, value: string) {
+        const expectedValue = getValue(value);
+        const collection = getElement(alias);
         const validation = getValidation(validationType);
-        for (let i = 0; i < await collection.count(); i++) {
-            const elementText: string = await collection.nth(i).innerText();
-            validation(elementText, expectedValue);
-        }
+        collection.each((element: JQuery) => {
+            validation(element.text(), expectedValue);
+        });
     }
 );
 
@@ -170,15 +166,14 @@ Then(
  * @example I expect 'href' attribute of every element in 'Search Results' collection to contain 'google'
  */
 Then(
-    'I expect {string} attribute of every element in {string} collection {playwrightValidation} {string}',
-    async function (attribute: string, alias: string, validationType: string, value: string) {
-        const expectedValue = await getValue(value);
-        const collection = await getElement(alias);
+    'I expect {string} attribute of every element in {string} collection {cypressValidation} {string}',
+    function (attribute: string, alias: string, validationType: string, value: string) {
+        const expectedValue = getValue(value);
+        const collection = getElement(alias);
         const validation = getValidation(validationType);
-        for (let i = 0; i < await collection.count(); i++) {
-            const attributeValue: string | null = await collection.nth(i).getAttribute(attribute);
-            validation(attributeValue, expectedValue);
-        }
+        collection.each((element: JQuery) => {
+            validation(element.attr(attribute), expectedValue);
+        });
     }
 );
 
@@ -190,17 +185,14 @@ Then(
  * @example I expect 'href' property of every element in 'Search Results' collection to contain 'google'
  */
 Then(
-    'I expect {string} property of every element in {string} collection {playwrightValidation} {string}',
-    async function (property: string, alias: string, validationType: string, value: string) {
-        const expectedValue = await getValue(value);
-        const collection = await getElement(alias);
+    'I expect {string} property of every element in {string} collection {cypressValidation} {string}',
+    function (property: string, alias: string, validationType: string, value: string) {
+        const expectedValue = getValue(value);
+        const collection = getElement(alias);
         const validation = getValidation(validationType);
-        for (let i = 0; i < await collection.count(); i++) {
-            const propertyValue: string | null = await collection.nth(i).evaluate(
-                (node: any, property: string) => node[property], property
-            );
-            validation(propertyValue, expectedValue);
-        }
+        collection.each((element: JQuery) => {
+            validation(element.prop(property), expectedValue);
+        });
     }
 );
 
@@ -214,19 +206,15 @@ Then(
  * @example I expect 'font-family' css property of 'Label' to contain 'Fira'
  */
 Then(
-    'I expect {string} css property of {string} {playwrightValidation} {string}',
-    async function (property: string, alias: string, validationType: string, value: string) {
-        const propertyName = await getValue(property);
-        const expectedValue = await getValue(value);
-        const element = await getElement(alias);
+    'I expect {string} css property of {string} {cypressValidation} {string}',
+    function (property: string, alias: string, validationType: string, value: string) {
+        const propertyName = getValue(property);
+        const expectedValue = getValue(value);
+        const element = getElement(alias);
         const validation = getValidation(validationType);
-        const actualValue = await element.evaluate(
-            (node: Element, propertyName: string) => getComputedStyle(node).getPropertyValue(propertyName),
-            propertyName
-        );
-        this.log(`AR: ${actualValue}`);
-        this.log(`ER: ${expectedValue}`);
-        validation(actualValue, expectedValue);
+        element.then((e: JQuery) => {
+            validation(e.css(propertyName), expectedValue);
+        });
     }
 );
 
@@ -236,14 +224,18 @@ Then(
  * @param {string} value - expected text value
  * @example I expect text of alert does not contain 'coffee'
  */
-Then('I expect text of alert {playwrightValidation} {string}', async function (validationType: string, expectedValue: string) {
-        const alertText = await new Promise<string>(resolve => page.once('dialog', async (dialog) => {
-            resolve(dialog.message());
-        }));
-        const expected = await getValue(expectedValue);
+Then(
+    'I expect text of alert {cypressValidation} {string}',
+    function (validationType: string, expectedValue: string) {
         const validation = getValidation(validationType);
-        this.log(`AR: ${alertText}`);
-        this.log(`ER: ${expected}`);
-        validation(alertText, expectedValue);
+        const alertHandler = new Cypress.Promise((resolve, reject) => {
+            cy.on('window:alert', (alertText)=> {
+                resolve(alertText)
+            });
+            cy.on('window:confirm', (alertText)=> {
+                resolve(alertText)
+            });
+        });
+        return alertHandler.then(alertText => { validation(alertText, expectedValue) })
     }
 );

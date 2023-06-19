@@ -4,7 +4,7 @@ Feature: execute
     When I open '$actionsPage' url
 
   Scenario: execute function plain text
-    When I execute 'document.querySelector("#input").value = "some value"' function
+    When I execute 'this.document.querySelector("#input").value = "some value"' function
     Then I expect 'value' property of 'Input' to be equal 'some value'
 
   Scenario: execute function
@@ -13,7 +13,7 @@ Feature: execute
 
   Scenario: execute function and save result plain text
     When I click 'Button'
-    When I execute 'document.querySelector("#action").innerText' function and save result as 'innerText'
+    When I execute 'this.document.querySelector("#action").innerText' function and save result as 'innerText'
     Then I expect '$innerText' memory value to be equal 'click'
 
   Scenario: execute function and save result plain text

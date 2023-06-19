@@ -1,4 +1,4 @@
-import { When } from '@cucumber/cucumber';
+import { When } from '@badeball/cypress-cucumber-preprocessor';
 import { getValue } from './transformers';
 import { parseCoords } from './utils/utils';
 
@@ -7,8 +7,13 @@ import { parseCoords } from './utils/utils';
  * @param {string} button - button to press (left, right, middle)
  * @example When I press left mouse button
  */
-When('I press {playwrightMouseButton} mouse button', async function (button) {
-    await page.mouse.down({ button });
+When('I press {cypressMouseButton} mouse button on {string}', function (buttons: number, coords: string) {
+    const [x, y] = parseCoords(getValue(coords));
+    cy.get('body')
+        .trigger('mouseenter', x, y)
+        .trigger('mouseover', x, y)
+        .trigger('mousemove', x, y)
+        .trigger('mousedown', x, y, { buttons });
 });
 
 /**
@@ -16,8 +21,13 @@ When('I press {playwrightMouseButton} mouse button', async function (button) {
  * @param {string} button - button to release (left, right, middle)
  * @example When I release left mouse button
  */
-When('I release {playwrightMouseButton} mouse button', async function (button) {
-    await page.mouse.up({ button });
+When('I release {cypressMouseButton} mouse button on {string}', function (button: number, coords: string) {
+    const [x, y] = parseCoords(getValue(coords));
+    cy.get('body')
+        .trigger('mouseenter', x, y)
+        .trigger('mouseover', x, y)
+        .trigger('mousemove', x, y)
+        .trigger('mouseup', x, y, { button });
 });
 
 /**
@@ -25,9 +35,12 @@ When('I release {playwrightMouseButton} mouse button', async function (button) {
  * @param {string} coords - x, y coordinates to move
  * @example When I move mouse to '10, 15'
  */
-When('I move mouse to {string}', async function (coords){
-    const [x, y] = parseCoords(await getValue(coords));
-    await page.mouse.move(x, y);
+When('I move mouse to {string}', function (coords: string){
+    const [x, y] = parseCoords(getValue(coords));
+    cy.get('body')
+        .trigger('mouseenter', x, y)
+        .trigger('mouseover', x, y)
+        .trigger('mousemove', x, y);
 });
 
 /**
@@ -35,7 +48,12 @@ When('I move mouse to {string}', async function (coords){
  * @param {string} coords - x, y offset to scroll
  * @example When I scroll mouse wheel by '0, 15'
  */
-When('I scroll mouse wheel by {string}', async function (offset) {
-    const [x, y] = parseCoords(await getValue(offset));
-    await page.mouse.wheel(x, y);
+When('I scroll mouse wheel by {string} on {string}', function (offset: string, coords: string) {
+    const [x, y] = parseCoords(getValue(coords));
+    const [deltaX, deltaY] = parseCoords(getValue(offset));
+    cy.get('body')
+        .trigger('mouseenter', x, y)
+        .trigger('mouseover', x, y)
+        .trigger('mousemove', x, y)
+        .trigger('wheel', x, y, { deltaX, deltaY });
 });

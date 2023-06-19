@@ -1,7 +1,6 @@
-import { When } from '@cucumber/cucumber';
+import { When } from '@badeball/cypress-cucumber-preprocessor';
 import { getValue } from './transformers';
 import memory from '@qavajs/memory';
-import { Route } from '@playwright/test';
 
 /**
  * Create simple mock instance
@@ -10,20 +9,18 @@ import { Route } from '@playwright/test';
  * @example When I create mock for '/yourservice/**' as 'mock1'
  * @example When I create mock for '$mockUrlTemplate' as 'mock1'
  */
-When('I create mock for {string} as {string}', async function (urlTemplate: string, memoryKey: string) {
-    const url = await getValue(urlTemplate);
+When('I create mock for {string} as {string}', function (urlTemplate: string, memoryKey: string) {
+    const url = getValue(urlTemplate);
     memory.setValue(memoryKey, url);
 });
 
-async function respondWith(mockKey: string, statusCode: string, body: string): Promise<void> {
-    const mockUrl: string = await getValue(mockKey);
-    const responseStatusCode: number = parseInt(await getValue(statusCode));
-    const responseBody = await getValue(body);
-    await page.route(mockUrl, async (route: Route) => {
-        await route.fulfill({
-            body: responseBody,
-            status: responseStatusCode
-        });
+function respondWith(mockKey: string, statusCode: string, body: string): void {
+    const mockUrl: string = getValue(mockKey);
+    const responseStatusCode: number = parseInt(getValue(statusCode));
+    const responseBody = getValue(body);
+    cy.intercept(mockUrl, {
+        body: responseBody,
+        statusCode: responseStatusCode
     });
 }
 
@@ -62,29 +59,8 @@ When('I set {string} mock to respond {string} with {string}', respondWith);
  * When I create mock for '/yourservice/**' as 'myServiceMock'
  * And I set '$myServiceMock' mock to abort with 'Failed' reason
  */
-When('I set {string} mock to abort with {string} reason', async function (mockKey: string, reason: string) {
-    const mockUrl: string = await getValue(mockKey);
-    const errorCode: string = await getValue(reason);
-    await page.route(mockUrl, async (route: Route) => {
-        await route.abort(errorCode);
-    });
-});
-
-/**
- * Restore mock
- * @param {string} mockKey - memory key to get mock instance
- * @example When I restore '$myServiceMock'
- */
-When('I restore {string} mock', async function (mockKey: string) {
-    const mockUrl: string = await getValue(mockKey);
-    await page.unroute(mockUrl);
-});
-
-/**
- * Restore all mocks
- * @example When I restore all mocks
- */
-When('I restore all mocks', async function () {
-    //@ts-ignore
-    page._routes = [];
+When('I set {string} mock to abort with {string} reason', function (mockKey: string, reason: string) {
+    const mockUrl: string = getValue(mockKey);
+    const errorCode: string = getValue(reason);
+    cy.intercept(mockUrl, { forceNetworkError: true });
 });

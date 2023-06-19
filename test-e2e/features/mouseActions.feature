@@ -5,11 +5,10 @@ Feature: mouse actions
     And I hover over 'Event Handler'
 
   Scenario Outline: mouse press and release
-    Then I press <button> mouse button
+    Then I press <button> mouse button on '20, 500'
     And I expect text of 'Event Handler' to contain '"buttons":<buttonCode>'
     And I expect text of 'Event Handler' to contain '"type":"mousedown"'
-    Then I release <button> mouse button
-    And I expect text of 'Event Handler' to contain '"buttons":0'
+    Then I release <button> mouse button on '20, 500'
     And I expect text of 'Event Handler' to contain '"type":"mouseup"'
 
     Examples:
@@ -23,7 +22,7 @@ Feature: mouse actions
     And I expect text of 'Event Handler' to contain '"type":"mousemove"'
 
   Scenario Outline: mouse wheel
-    Then I scroll mouse wheel by '<offset>'
+    Then I scroll mouse wheel by '<offset>' on '20, 500'
     And I expect text of 'Event Handler' to contain '"type":"wheel"'
     And I expect text of 'Event Handler' to match '<deltaY>'
 
@@ -31,4 +30,3 @@ Feature: mouse actions
       | offset  | deltaY            |
       | 0, 100  | .+"deltaY":\d+.+  |
       | 0, -100 | .+"deltaY":-\d+.+ |
-

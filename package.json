@@ -1,21 +1,19 @@
 {
-  "name": "@qavajs/steps-playwright",
-  "version": "0.26.0",
-  "description": "steps to interact with playwright",
+  "name": "@qavajs/steps-cypress",
+  "version": "0.1.0",
+  "description": "steps to interact with cypress",
   "main": "./index.js",
   "scripts": {
     "build": "tsc",
-    "test": "vitest --coverage run",
-    "test:e2e": "ts-node --project tsconfig.json node_modules/@qavajs/cli/bin/qavajs.js run --config test-e2e/webui.ts",
-    "debug:e2e": "ts-node --project tsconfig.json node_modules/@qavajs/cli/bin/qavajs.js run --config test-e2e/webui.ts --profile debug"
+    "test:e2e": "cypress run --config-file test-e2e/cypress.config.ts",
+    "debug:e2e": "cypress open --config-file test-e2e/cypress.config.ts"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/qavajs/steps-playwright.git"
   },
   "authors": [
-    "Alexandr Galichenko",
-    "Alexandr Legchilov"
+    "Alexandr Galichenko"
   ],
   "license": "MIT",
   "bugs": {
@@ -23,26 +21,18 @@
   },
   "homepage": "https://github.com/qavajs/steps-playwright#readme",
   "devDependencies": {
-    "@cucumber/cucumber": "^9.1.2",
-    "@qavajs/cli": "^0.26.0",
-    "@qavajs/console-formatter": "^0.2.1",
-    "@qavajs/html-formatter": "^0.0.11",
-    "@qavajs/memory": "^1.5.0",
-    "@qavajs/po-playwright": "^0.0.9",
-    "@qavajs/webstorm-adapter": "^8.0.0",
-    "@qavajs/xunit-formatter": "^0.0.4",
+    "@badeball/cypress-cucumber-preprocessor": "^18.0.1",
+    "@cypress/webpack-preprocessor": "^5.17.1",
+    "@qavajs/memory": "^1.5.1",
+    "@qavajs/po-cypress": "^0.1.0",
     "@types/chai": "^4.3.5",
     "@types/express": "^4.17.17",
-    "@types/jest": "^29.5.2",
-    "@vitest/coverage-c8": "^0.32.0",
+    "cypress": "^12.14.0",
     "express": "^4.18.2",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.1.3",
-    "vitest": "^0.32.0"
+    "ts-loader": "^9.4.3",
+    "typescript": "^5.1.3"
   },
   "dependencies": {
-    "@playwright/test": "^1.35.0",
-    "@qavajs/validation": "^0.0.5",
-    "playwright": "^1.35.0"
+    "@qavajs/validation": "^0.0.5"
   }
 }

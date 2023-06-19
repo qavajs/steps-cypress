@@ -1,6 +1,7 @@
-import { When } from '@cucumber/cucumber';
+import { When } from '@badeball/cypress-cucumber-preprocessor';
 import { getValue } from './transformers';
 import memory from '@qavajs/memory';
+import Cookie = Cypress.Cookie;
 
 /**
  * Set cookie
@@ -9,13 +10,10 @@ import memory from '@qavajs/memory';
  * @example I set 'userID' cookie 'user1'
  * @example I set 'userID' cookie '$userIdCookie'
  */
-When('I set {string} cookie as {string}', async function (cookie, value) {
-    const cookieValue = await getValue(value);
+When('I set {string} cookie as {string}', function (cookie: string, value: string) {
+    const cookieValue = getValue(value);
     const cookieObject = typeof cookieValue === 'object' ? cookieValue : { value: cookieValue };
-    if (!cookieObject.url && !cookieObject.domain && !cookieObject.path) {
-        cookieObject.url = page.url();
-    }
-    await context.addCookies([{ name: await getValue(cookie), ...cookieObject }]);
+    cy.setCookie(cookie, cookieObject.value, cookieObject);
 });
 
 /**
@@ -24,9 +22,9 @@ When('I set {string} cookie as {string}', async function (cookie, value) {
  * @param {string} key - memory key
  * @example I save value of 'auth' cookie as 'authCookie'
  */
-When('I save value of {string} cookie as {string}', async function (cookie, key) {
-    const cookieName = await getValue(cookie);
-    const cookies = await context.cookies();
-    const cookieValue = cookies.find(c => c.name === cookieName);
-    memory.setValue(key, cookieValue);
+When('I save value of {string} cookie as {string}', function (cookie: string, key: string) {
+    const cookieName = getValue(cookie);
+    cy.getCookie(cookieName).then((cookie: any) => {
+        memory.setValue(key, cookie);
+    });
 });
